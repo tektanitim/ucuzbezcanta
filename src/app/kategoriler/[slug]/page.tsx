@@ -8,15 +8,17 @@ import { notFound } from 'next/navigation';
 
 import { Product, Category } from '@/types';
 
-interface CategoryPageProps {
-  params: {
-    slug: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
+type CategoryPageProps = {
+  params: { slug: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+};
 
 // Dinamik metadata oluşturma
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const categorySlug = params.slug;
   const category: Category | null = await fetchSanityData<Category | null>(`
     *[_type == "category" && slug.current == "${categorySlug}"][0]{
