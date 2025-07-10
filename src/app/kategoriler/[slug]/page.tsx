@@ -7,11 +7,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Product, Category } from '@/types';
+import { type PageProps } from 'next/app';
 
-type CategoryPageProps = {
+interface CategoryPageProps extends PageProps {
   params: { slug: string };
-  searchParams?: Record<string, string | string[] | undefined>;
-};
+}
 
 // Dinamik metadata oluşturma
 export async function generateMetadata({

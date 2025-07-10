@@ -1,6 +1,5 @@
 import { client } from '@/lib/sanity';
 import { NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +15,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const getCachedResults = unstable_cache(
-      async (term) => client.fetch(),
-      ['search-results'],
-      {tags:['products']}
-    );
+
 
     const searchTerm = query.trim().toLowerCase().replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, "");
 
