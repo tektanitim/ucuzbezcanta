@@ -12,6 +12,7 @@ interface CategoryPageProps {
   params: {
     slug: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 // Dinamik metadata oluşturma
