@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 
 import { Product, Category } from '@/types';
 
-interface PageProps {
+interface CategoryPageProps {
   params: {
     slug: string;
   };
@@ -46,7 +46,7 @@ export async function generateStaticParams() {
   }));
 }
 
-const CategoryPage = async ({ params }: PageProps) => {
+const CategoryPage = async ({ params }: CategoryPageProps) => {
   const categorySlug = params.slug;
 
   const data = await fetchSanityData<{
