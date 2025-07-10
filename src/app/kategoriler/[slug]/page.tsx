@@ -8,6 +8,12 @@ import { notFound } from 'next/navigation';
 
 import { Product, Category } from '@/types';
 
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
 // Dinamik metadata oluşturma
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const categorySlug = params.slug;
@@ -40,7 +46,7 @@ export async function generateStaticParams() {
   }));
 }
 
-const CategoryPage = async ({ params }: { params: { slug: string } }) => {
+const CategoryPage = async ({ params }: PageProps) => {
   const categorySlug = params.slug;
 
   const data = await fetchSanityData<{
