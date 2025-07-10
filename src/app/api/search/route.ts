@@ -1,6 +1,8 @@
-// app/api/search/route.ts - (Mevcut kodunuz geçerli, değişiklik yok)
 import { client } from '@/lib/sanity';
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
@@ -8,33 +10,42 @@ export async function GET(request: Request) {
     const query = searchParams.get('q');
 
     if (!query) {
-      return NextResponse.json({ message: 'Arama terimi boş olamaz.' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'Lütfen arama terimi giriniz' }, 
+        { status: 400 }
+      );
     }
 
-    const searchTerm = query.trim().toLowerCase();
+    const getCachedResults = unstable_cache(
+      async (term) => client.fetch(),
+      ['search-results'],
+      {tags:['products']}
+    );
 
-    const searchQuery = `
+    const searchTerm = query.trim().toLowerCase().replace(/[^\w\s-ğüşıöçĞÜŞİÖÇ]/g, "");
+
+    const searchResults = await client.fetch(`
       *[_type == "product" && (
         lower(name) match "${searchTerm}*" ||
         lower(description) match "${searchTerm}*" ||
-        lower(category->name) match "${searchTerm}*"
+        lower(category->title) match "${searchTerm}*"
       )]{
         _id,
         name,
-        slug,
+        "slug": slug.current,
         price,
         images,
-        "categoryName": category->title, // category->name yerine category->title kullanıldı (Sanity category şemasında title alanı vardır)
+        "categoryName": category->title,
         description
       }
-    `;
+    `);
 
-    const searchResults = await client.fetch(searchQuery);
-
-    return NextResponse.json(searchResults, { status: 200 });
+    return NextResponse.json(searchResults.length > 0 ? searchResults : []);
 
   } catch (error) {
-    console.error('Arama API hatası:', error);
-    return NextResponse.json({ message: 'Arama sırasında bir hata oluştu.' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Arama işlemi başarısız' },
+      { status: 500 }
+    );
   }
 }
