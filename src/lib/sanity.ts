@@ -18,8 +18,8 @@ export function urlFor(source: SanityImageSource) {
 }
 
 // Sanity'den veri çekmek için genel bir fonksiyon
-export async function fetchSanityData(query: string) {
-  const data = await client.fetch(query);
+export async function fetchSanityData<T>(query: string, params: Record<string, unknown> = {}): Promise<T> {
+  const data = await client.fetch<T>(query, params);
   return data;
 }
 

@@ -3,20 +3,8 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { urlFor } from '@/lib/sanity';
+import { Product } from '@/types'; // Product tipini içe aktar
 
-interface Product {
-  _id: string;
-  name: string;
-  slug: {
-    current: string;
-  };
-  price: number;
-  images: Array<{
-    _key: string;
-    asset: any;
-    alt?: string;
-  }>;
-}
 
 interface ProductCardProps {
   product: Product;

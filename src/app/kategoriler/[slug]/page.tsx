@@ -1,51 +1,30 @@
 // src/app/kategoriler/[slug]/page.tsx
 import React from 'react';
-import { fetchSanityData } from '@/lib/sanity';
+import { fetchSanityData } from '@/lib/sanity'; // fetchSanityData kullanmaya devam ediyoruz
 import ProductCard from '../../../../components/ProductCard';
 import { Metadata } from 'next';
-import Link from 'next/link'; // Link bileşeni eklendi
+import Link from 'next/link';
+import { notFound } from 'next/navigation'; // Sayfa bulunamadığında 404 döndürmek için
 
-// Ürün tipi tanımı (mevcut haliyle kalacak)
-interface Product {
-  _id: string;
-  name: string;
-  slug: {
-    current: string;
-  };
-  price: number;
-  images: Array<{
-    _key: string;
-    asset: any;
-    alt?: string;
-  }>;
-  category: {
-    _ref: string;
-    _type: string;
-  };
-}
+// Merkezi tip tanımlarımızı import ediyoruz
+// SanityImageSource'a burada ihtiyacımız yok çünkü urlFor'ı direkt kullanmıyoruz
+import { Product, Category } from '@/types';
 
-// Kategori tipi tanımı (mevcut haliyle kalacak)
-interface Category {
-  _id: string;
-  title: string;
-  slug: {
-    current: string;
-  };
-}
 
-// Dinamik rota parametreleri için tip tanımı (mevcut haliyle kalacak)
+// Dinamik rota parametreleri için tip tanımı
 interface CategoryPageProps {
   params: {
     slug: string; // URL'den gelecek kategori slug'ı
   };
 }
 
-// Dinamik metadata oluşturma (mevcut haliyle kalacak)
+// Dinamik metadata oluşturma
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const categorySlug = params.slug;
-  const category: Category | null = await fetchSanityData(`
+  // Kategori tipini Category olarak belirtiyoruz
+  const category: Category | null = await fetchSanityData<Category | null>(`
     *[_type == "category" && slug.current == "${categorySlug}"][0]{
-      title
+      title // Şemanızda 'title' olarak tanımlı
     }
   `);
 
@@ -58,9 +37,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
-// generateStaticParams (mevcut haliyle kalacak)
+// generateStaticParams (Sanity'den çektiğimiz Category tipini kullanıyoruz)
 export async function generateStaticParams() {
-  const categories: Category[] = await fetchSanityData(`
+  const categories: Category[] = await fetchSanityData<Category[]>(`
     *[_type == "category"]{
       slug {
         current
@@ -75,12 +54,17 @@ export async function generateStaticParams() {
 const CategoryPage: React.FC<CategoryPageProps> = async ({ params }) => {
   const categorySlug = params.slug;
 
-  // Hem kategori bilgisi, hem ürünler, hem de TÜM kategorileri çekiyoruz
-  const data = await fetchSanityData(`
+  // Sanity sorgusunun dönüş tipini belirliyoruz.
+  // currentCategory Category, products Product[], allCategories Category[] olacak.
+  const data = await fetchSanityData<{
+    currentCategory: Category | null;
+    products: Product[];
+    allCategories: Category[];
+  }>(`
     {
       "currentCategory": *[_type == "category" && slug.current == "${categorySlug}"][0]{
         _id,
-        title,
+        title, // Şemanızda 'title' olarak tanımlı
         slug {
           current
         }
@@ -93,14 +77,21 @@ const CategoryPage: React.FC<CategoryPageProps> = async ({ params }) => {
         },
         price,
         images[]{
-          asset,
-          alt,
-          _key
-        }
+          _key,
+          _type, // SanityImage için _type gerekli
+          asset->{ // asset'i çözüyoruz
+            _ref,
+            _type,
+            url // urlFor kullanmasak da asset'in url'i çekilebilir
+          },
+          alt
+        },
+        // Category referansını çözmüyoruz çünkü ProductCard'da category detaylarına ihtiyacımız yok
+        // Eğer ProductCard içinde category.title kullanılıyorsa, o zaman category->{_id, title, slug} çekilmeli
       },
       "allCategories": *[_type == "category"] | order(title asc) { // Tüm kategorileri çek
         _id,
-        title,
+        title, // Şemanızda 'title' olarak tanımlı
         slug {
           current
         }
@@ -108,23 +99,19 @@ const CategoryPage: React.FC<CategoryPageProps> = async ({ params }) => {
     }
   `);
 
-  const currentCategory: Category | null = data.currentCategory;
-  const products: Product[] = data.products;
-  const allCategories: Category[] = data.allCategories; // Tüm kategoriler
+  const currentCategory = data.currentCategory;
+  const products = data.products;
+  const allCategories = data.allCategories;
 
   if (!currentCategory) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-3xl font-bold text-red-600">Kategori Bulunamadı</h1>
-        <p className="mt-4 text-lg text-gray-700">Aradığınız kategoriye ait sayfa bulunamadı veya silinmiş olabilir.</p>
-      </div>
-    );
+    // Kategori bulunamazsa 404 sayfasına yönlendir
+    notFound();
   }
 
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center md:text-left">
-        {currentCategory.title} Bez Çantalar
+        {currentCategory.title} Bez Çantalar {/* category.title kullanıldı */}
       </h1>
 
       <div className="flex flex-col md:flex-row gap-8"> {/* İki sütunlu layout */}
@@ -142,7 +129,7 @@ const CategoryPage: React.FC<CategoryPageProps> = async ({ params }) => {
                       : 'text-gray-700 hover:bg-gray-200' // Normal kategori stili
                     }`}
                 >
-                  {category.title}
+                  {category.title} {/* category.title kullanıldı */}
                 </Link>
               </li>
             ))}
@@ -156,6 +143,7 @@ const CategoryPage: React.FC<CategoryPageProps> = async ({ params }) => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Ürün grid'i */}
               {products.map((product) => (
+                // ProductCard'a Product tipinde bir obje gönderiyoruz
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>

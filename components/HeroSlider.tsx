@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
 
+
+import { SliderItem } from '@/types';
+
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
@@ -15,15 +18,6 @@ import 'swiper/css/effect-fade';
 
 import { fetchSanityData, urlFor } from '@/lib/sanity'; // @/src/lib/sanity DEĞİL, sizin durumunuzda @lib/sanity çalışıyor
 
-interface SliderItem {
-  _id: string;
-  title: string;
-  subtitle?: string;
-  image: any; // Sanity ImageSource
-  buttonText?: string;
-  buttonLink?: string;
-  order: number;
-}
 
 const HeroSlider: React.FC = () => {
   const [sliderItems, setSliderItems] = useState<SliderItem[]>([]);

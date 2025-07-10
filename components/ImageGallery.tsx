@@ -5,10 +5,19 @@ import Image from "next/image";
 import { urlFor } from "@/lib/sanity";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-interface ImageType {
+interface SanityImage {
+  _type: 'image';
+  asset: {
+     _ref: string;
+     _type: 'reference';
+     url?: string; // Sanity'den gelen görsel URL'si 
+    };
+  alt?: string; // Görselin alternatif metni
+}
+
+interface ImageType extends SanityImage {
   _key: string;
-  asset: any;
-  alt?: string;
+  
 }
 
 interface ImageGalleryProps {
